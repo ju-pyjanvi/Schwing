@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/png" href="/static/schwing-logo.png"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Schwing — Your Debt Map</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue: #12AAED;
+      --navy: #0A1628;
+      --dark: #2D5F6E;
+      --bg: #f0f9ff;
+      --white: #ffffff;
+      --gray: #6b7280;
+    }
+
+    html, body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--navy);
+      height: 100%;
+      overflow: hidden;
+    }
+
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.1rem 2.5rem;
+      background: rgba(240,249,255,0.7);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(18,170,237,0.15);
+    }
+
+    .nav-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem;
+      color: var(--navy);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .nav-logo img { height: 32px; }
+
+    .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+    .nav-links a { text-decoration: none; color: var(--gray); font-weight: 500; font-size: 0.9rem; }
+    .nav-links a.active { color: var(--blue); }
+    .nav-links a.btn-pill {
+      background: var(--navy); color: white; padding: 0.5rem 1.2rem; border-radius: 100px; font-weight: 600;
+    }
+
+    #scene-container {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+    }
+
+    .map-header {
+      position: absolute;
+      top: 5.5rem;
+      left: 2.5rem;
+      z-index: 10;
+      max-width: 360px;
+      pointer-events: none;
+    }
+
+    .map-header .eyebrow {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--blue);
+      margin-bottom: 0.5rem;
+    }
+
+    .map-header h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.2rem;
+      color: var(--navy);
+      line-height: 1.15;
+      margin-bottom: 0.6rem;
+    }
+
+    .map-header p {
+      color: var(--gray);
+      font-size: 0.92rem;
+      line-height: 1.6;
+    }
+
+    .demo-badge {
+      display: inline-block;
+      margin-top: 0.9rem;
+      background: rgba(18,170,237,0.12);
+      color: var(--blue);
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 0.35rem 0.9rem;
+      border-radius: 100px;
+      pointer-events: auto;
+    }
+
+    #detail-panel {
+      position: absolute;
+      top: 5.5rem;
+      right: 2.5rem;
+      z-index: 10;
+      width: 280px;
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(18,170,237,0.15);
+      border-radius: 18px;
+      padding: 1.5rem;
+      box-shadow: 0 12px 40px rgba(10,22,40,0.08);
+      transition: opacity 0.25s, transform 0.25s;
+    }
+
+    #detail-panel.hidden { opacity: 0; transform: translateY(-10px); pointer-events: none; }
+
+    #detail-panel .dp-dot {
+      width: 14px; height: 14px; border-radius: 50%;
+      display: inline-block; margin-right: 0.5rem; vertical-align: middle;
+    }
+
+    #detail-panel h3 { font-family: 'Playfair Display', serif; font-size: 1.2rem; color: var(--navy); display: inline; }
+
+    #detail-panel .dp-row { display: flex; justify-content: space-between; margin-top: 0.9rem; font-size: 0.85rem; }
+    #detail-panel .dp-row span:first-child { color: var(--gray); }
+    #detail-panel .dp-row span:last-child { font-weight: 700; color: var(--navy); }
+
+    #legend {
+      position: absolute;
+      bottom: 2rem;
+      left: 2.5rem;
+      z-index: 10;
+      display: flex;
+      gap: 1.5rem;
+      align-items: center;
+      background: rgba(255,255,255,0.7);
+      backdrop-filter: blur(12px);
+      border-radius: 100px;
+      padding: 0.6rem 1.5rem;
+      border: 1px solid rgba(18,170,237,0.12);
+      flex-wrap: wrap;
+    }
+
+    .legend-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; color: var(--gray); font-weight: 500; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+    .map-actions {
+      position: absolute;
+      bottom: 2rem;
+      right: 2.5rem;
+      z-index: 10;
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .btn {
+      background: var(--blue); color: white; border: none;
+      padding: 0.75rem 1.6rem; border-radius: 100px; font-size: 0.9rem; font-weight: 600;
+      cursor: pointer; text-decoration: none; font-family: 'Inter', sans-serif; transition: opacity 0.2s;
+    }
+    .btn:hover { opacity: 0.85; }
+
+    .btn-ghost {
+      background: rgba(255,255,255,0.7); backdrop-filter: blur(12px); color: var(--navy);
+      border: 1px solid rgba(10,22,40,0.15); padding: 0.75rem 1.6rem; border-radius: 100px;
+      font-size: 0.9rem; font-weight: 600; cursor: pointer; text-decoration: none; font-family: 'Inter', sans-serif;
+    }
+
+    @media (max-width: 768px) {
+      .map-header { max-width: 240px; top: 5rem; left: 1.25rem; }
+      .map-header h1 { font-size: 1.6rem; }
+      #detail-panel { width: 220px; right: 1.25rem; top: auto; bottom: 6rem; }
+      #legend { left: 1.25rem; bottom: 1rem; max-width: 90%; }
+      .map-actions { right: 1.25rem; bottom: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="/" class="nav-logo">
+      <img src="/static/schwing-logo.png" alt="Schwing" onerror="this.style.display='none'; this.nextSibling.style.display='inline'"/>
+      <span style="display:none">⟡Schwing</span>
+    </a>
+    <div class="nav-links">
+      <a href="/app">Analyzer</a>
+      <a href="/results">Payoff Plan</a>
+      <a href="/map" class="active">Debt Map</a>
+      <a href="/about" class="btn-pill">About</a>
+    </div>
+  </nav>
+
+  <div id="scene-container"></div>
+
+  <div class="map-header">
+    <div class="eyebrow">Your Debt Universe</div>
+    <h1 id="map-title">Where every rupee is pulled.</h1>
+    <p id="map-desc">Each orb is a debt — its size shows how much you pay monthly, its color shows how aggressively interest is working against you. Drag to rotate. Click an orb for details.</p>
+    <div id="demo-badge" class="demo-badge hidden">Showing sample data — run your analysis for your real map</div>
+  </div>
+
+  <div id="detail-panel" class="hidden">
+    <span class="dp-dot" id="dp-dot"></span><h3 id="dp-name"></h3>
+    <div class="dp-row"><span>Monthly EMI</span><span id="dp-emi"></span></div>
+    <div class="dp-row"><span>Total Amount</span><span id="dp-total"></span></div>
+    <div class="dp-row"><span>Interest Rate</span><span id="dp-rate"></span></div>
+    <div class="dp-row"><span>% of Income</span><span id="dp-pct"></span></div>
+  </div>
+
+  <div id="legend">
+    <div class="legend-item"><span class="legend-dot" style="background:#10b981"></span> Low interest (&lt;8%)</div>
+    <div class="legend-item"><span class="legend-dot" style="background:#eab308"></span> Moderate (8-14%)</div>
+    <div class="legend-item"><span class="legend-dot" style="background:#f97316"></span> High (14-20%)</div>
+    <div class="legend-item"><span class="legend-dot" style="background:#ef4444"></span> Severe (20%+)</div>
+  </div>
+
+  <div class="map-actions">
+    <a href="/results" class="btn-ghost">View Payoff Plan</a>
+    <a href="/app" class="btn">← Back to Analyzer</a>
+  </div>
+
+  <script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
+  <script src="/static/js/debt-map.js"></script>
+  <script>
+    let debtsData = JSON.parse(sessionStorage.getItem('schwing_debts') || '[]');
+    let takeHome = parseFloat(sessionStorage.getItem('schwing_takehome') || '0');
+
+    if (debtsData.length === 0 || !takeHome) {
+      takeHome = 60000;
+      debtsData = [
+        { name: 'Credit Card', monthly_emi: 6000, total_amount: 80000, interest_rate: 36 },
+        { name: 'Personal Loan', monthly_emi: 8000, total_amount: 150000, interest_rate: 16 },
+        { name: 'Car EMI', monthly_emi: 9000, total_amount: 300000, interest_rate: 9 },
+        { name: 'Education Loan', monthly_emi: 5000, total_amount: 400000, interest_rate: 7 }
+      ];
+      document.getElementById('demo-badge').classList.remove('hidden');
+      document.getElementById('map-title').textContent = 'A glimpse into a debt universe.';
+      document.getElementById('map-desc').textContent = "This is sample data so you can see how it works. Run your own analysis to generate your personal debt map.";
+    }
+
+    function showDetail(d) {
+      const panel = document.getElementById('detail-panel');
+      panel.classList.remove('hidden');
+      document.getElementById('dp-dot').style.background = d.colorHex;
+      document.getElementById('dp-name').textContent = d.name;
+      document.getElementById('dp-emi').textContent = `₹${d.monthly_emi.toLocaleString('en-IN')}`;
+      document.getElementById('dp-total').textContent = d.isSurplus ? '—' : `₹${d.total_amount.toLocaleString('en-IN')}`;
+      document.getElementById('dp-rate').textContent = d.isSurplus ? '—' : `${d.interest_rate}%`;
+      document.getElementById('dp-pct').textContent = `${((d.monthly_emi / takeHome) * 100).toFixed(1)}%`;
+    }
+
+    initOrbitalDebtMap({
+      container: document.getElementById('scene-container'),
+      debts: debtsData,
+      takeHome: takeHome,
+      interactive: true,
+      autoRotate: true,
+      onSelect: showDetail
+    });
+  </script>
+</body>
+</html>

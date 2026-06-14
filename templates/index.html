@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/png" href="/static/schwing-logo.png"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Schwing — Debt Analyzer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue: #12AAED;
+      --dark: #0f1f2e;
+      --navy: #1a2f42;
+      --card: #ffffff;
+      --bg: #f0f9ff;
+      --gray: #6b7280;
+      --light: #e0f4fd;
+      --danger: #ef4444;
+      --green: #10b981;
+      --border: rgba(18,170,237,0.15);
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: #1a1a2e;
+      min-height: 100vh;
+    }
+
+    /* NAV */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--dark);
+      padding: 1rem 2.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      text-decoration: none;
+    }
+
+    .nav-logo img { height: 32px; }
+
+    .nav-logo-text {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.4rem;
+      color: white;
+    }
+
+    .nav-links { display: flex; align-items: center; gap: 2rem; }
+
+    .nav-links a {
+      text-decoration: none;
+      color: rgba(255,255,255,0.6);
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover, .nav-links a.active { color: var(--blue); }
+
+    .nav-btn {
+      background: var(--blue);
+      color: white !important;
+      padding: 0.5rem 1.2rem;
+      border-radius: 8px;
+      font-weight: 600 !important;
+    }
+
+    /* HERO STRIP */
+    .hero-strip {
+      background: var(--dark);
+      padding: 3.5rem 2.5rem 4rem;
+      text-align: center;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .hero-strip .label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--blue);
+      margin-bottom: 1rem;
+    }
+
+    .hero-strip h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2.2rem, 5vw, 3.5rem);
+      color: white;
+      line-height: 1.15;
+      margin-bottom: 1rem;
+    }
+
+    .hero-strip h1 em { color: var(--blue); font-style: italic; }
+
+    .hero-strip p {
+      color: rgba(255,255,255,0.55);
+      font-size: 1rem;
+      max-width: 480px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+
+    /* STEP INDICATOR */
+    .steps-indicator {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      padding: 2rem 2.5rem;
+      background: white;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .step-dot {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #9ca3af;
+      transition: color 0.3s;
+    }
+
+    .step-dot.active { color: var(--blue); }
+    .step-dot.done { color: var(--green); }
+
+    .step-circle {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 2px solid #d1d5db;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.78rem;
+      font-weight: 700;
+      transition: all 0.3s;
+      flex-shrink: 0;
+    }
+
+    .step-dot.active .step-circle {
+      border-color: var(--blue);
+      background: var(--blue);
+      color: white;
+    }
+
+    .step-dot.done .step-circle {
+      border-color: var(--green);
+      background: var(--green);
+      color: white;
+    }
+
+    .step-line {
+      width: 60px;
+      height: 2px;
+      background: #e5e7eb;
+      margin: 0 0.5rem;
+    }
+
+    /* MAIN */
+    main {
+      max-width: 760px;
+      margin: 3rem auto;
+      padding: 0 1.5rem;
+    }
+
+    /* CARDS */
+    .card {
+      background: white;
+      border-radius: 20px;
+      padding: 2.5rem;
+      box-shadow: 0 2px 20px rgba(0,0,0,0.06), 0 0 0 1px var(--border);
+      margin-bottom: 1.5rem;
+    }
+
+    .card-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--blue);
+      margin-bottom: 0.75rem;
+    }
+
+    .card h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.6rem;
+      color: #0f1f2e;
+      margin-bottom: 0.4rem;
+    }
+
+    .card > p {
+      color: var(--gray);
+      margin-bottom: 2rem;
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    /* UPLOAD */
+    .upload-area {
+      border: 2px dashed var(--blue);
+      border-radius: 14px;
+      padding: 3.5rem 2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 1.5rem;
+      background: #f8fcff;
+    }
+
+    .upload-area:hover {
+      background: var(--light);
+      border-color: #0e8fc7;
+    }
+
+    .upload-icon {
+      font-size: 2rem;
+      color: var(--blue);
+      margin-bottom: 0.75rem;
+      display: block;
+    }
+
+    .upload-label {
+      font-weight: 600;
+      color: #0f1f2e;
+      font-size: 1rem;
+      margin-bottom: 0.3rem;
+    }
+
+    .upload-sub { font-size: 0.82rem; color: var(--gray); }
+    #upload-status { margin-top: 0.75rem; font-size: 0.88rem; }
+
+    /* SALARY RESULT */
+    #salary-result { margin-bottom: 1.5rem; }
+
+    .detected-box {
+      background: linear-gradient(135deg, #e0f4fd, #f0f9ff);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.2rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+
+    .detected-box .detected-label { font-size: 0.85rem; color: var(--gray); }
+    .detected-box .detected-value { font-size: 1.3rem; font-weight: 700; color: var(--blue); font-family: 'Playfair Display', serif; }
+
+    label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #374151;
+      display: block;
+      margin-bottom: 0.4rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    input[type="number"], input[type="text"] {
+      border: 1.5px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+      font-size: 1rem;
+      width: 100%;
+      margin-bottom: 1rem;
+      font-family: 'Inter', sans-serif;
+      color: #0f1f2e;
+      transition: border-color 0.2s;
+      background: #fafafa;
+    }
+
+    input:focus { outline: none; border-color: var(--blue); background: white; }
+
+    .step1-actions { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
+
+    /* BUTTONS */
+    .btn {
+      background: var(--blue);
+      color: white;
+      border: none;
+      padding: 0.85rem 2rem;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'Inter', sans-serif;
+      letter-spacing: 0.01em;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn:hover { background: #0e8fc7; transform: translateY(-1px); }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--blue);
+      border: 1.5px solid var(--blue);
+      padding: 0.82rem 1.8rem;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      transition: all 0.2s;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-outline:hover { background: var(--light); }
+
+    /* DEBT ROWS */
+    .debt-header {
+      display: grid;
+      grid-template-columns: 2fr 1.5fr 1fr 1.5fr 0.3fr;
+      gap: 0.6rem;
+      margin-bottom: 0.5rem;
+      padding: 0 0.2rem;
+    }
+
+    .debt-header span {
+      font-size: 0.72rem;
+      color: var(--gray);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .debt-row {
+      display: grid;
+      grid-template-columns: 2fr 1.5fr 1fr 1.5fr 0.3fr;
+      gap: 0.6rem;
+      margin-bottom: 0.6rem;
+      align-items: center;
+    }
+
+    .debt-row input { margin-bottom: 0; }
+
+    .remove-btn {
+      background: none;
+      border: none;
+      color: #d1d5db;
+      font-size: 1.1rem;
+      cursor: pointer;
+      padding: 0;
+      transition: color 0.2s;
+    }
+
+    .remove-btn:hover { color: var(--danger); }
+
+    /* LOADER */
+    #loader {
+      text-align: center;
+      padding: 5rem 2rem;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 2px 20px rgba(0,0,0,0.06);
+      margin-bottom: 1.5rem;
+    }
+
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 3px solid var(--light);
+      border-top-color: var(--blue);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 1.2rem;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    #loader-text { color: #0f1f2e; font-weight: 600; font-size: 1rem; }
+    #loader p.sub { color: var(--gray); font-size: 0.85rem; margin-top: 0.4rem; }
+
+    /* RESULTS */
+    .summary-box {
+      background: linear-gradient(135deg, #0f1f2e, #1a3548);
+      border-radius: 16px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .summary-text { color: rgba(255,255,255,0.75); font-size: 0.92rem; line-height: 1.7; margin-bottom: 1.5rem; }
+
+    .rec-text {
+      color: rgba(255,255,255,0.75);
+      font-size: 0.88rem;
+      margin-top: 1rem;
+      line-height: 1.6;
+    }
+
+    .stats-row { display: flex; gap: 1rem; flex-wrap: wrap; }
+
+    .stat {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 1rem 1.2rem;
+      flex: 1;
+      min-width: 100px;
+      text-align: center;
+    }
+
+    .stat .value { font-size: 1.3rem; font-weight: 700; color: var(--blue); font-family: 'Playfair Display', serif; }
+    .stat .label { font-size: 0.72rem; color: rgba(255,255,255,0.5); margin-top: 0.3rem; text-transform: uppercase; letter-spacing: 0.05em; }
+
+    .rec-pill {
+      display: inline-block;
+      background: rgba(18,170,237,0.15);
+      border: 1px solid rgba(18,170,237,0.3);
+      color: var(--blue);
+      padding: 0.4rem 1rem;
+      border-radius: 100px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      margin-top: 1.2rem;
+    }
+
+    /* MAP CONTAINER */
+    .map-container {
+      margin-bottom: 2rem;
+      background: white;
+      border-radius: 16px;
+      padding: 1.5rem;
+      border: 1px solid var(--border);
+    }
+
+    .map-container h3 {
+      font-family: 'Playfair Display', serif;
+      color: #0f1f2e;
+      margin-bottom: 1rem;
+      font-size: 1.1rem;
+    }
+
+    #debt-map {
+      width: 100%;
+      height: auto;
+      border-radius: 10px;
+      background: #f8fcff;
+    }
+
+    .step3-actions {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-top: 0.5rem;
+    }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo">
+    <img src="/static/schwing-logo.png" alt="Schwing"
+         onerror="this.style.display='none'; this.nextSibling.style.display='block'"/>
+    <span class="nav-logo-text" style="display:none">⟡ Schwing</span>
+  </a>
+  <div class="nav-links">
+    <a href="/app" class="active">Analyzer</a>
+    <a href="/map">Debt Map</a>
+    <a href="/about" class="nav-btn">About</a>
+  </div>
+</nav>
+
+<!-- HERO STRIP -->
+<div class="hero-strip">
+  <div class="label">AI-Powered Debt Freedom</div>
+  <h1>Know exactly where<br/>every rupee <em>needs</em> to go.</h1>
+  <p>Upload your salary slip, enter your debts, and get a personalized payoff roadmap in seconds.</p>
+</div>
+
+<!-- STEP INDICATOR -->
+<div class="steps-indicator">
+  <div class="step-dot active" id="ind-1">
+    <div class="step-circle">1</div>
+    <span>Salary</span>
+  </div>
+  <div class="step-line"></div>
+  <div class="step-dot" id="ind-2">
+    <div class="step-circle">2</div>
+    <span>Debts</span>
+  </div>
+  <div class="step-line"></div>
+  <div class="step-dot" id="ind-3">
+    <div class="step-circle">3</div>
+    <span>Your Plan</span>
+  </div>
+</div>
+
+<main>
+
+  <!-- STEP 1 -->
+  <section id="step-1" class="card">
+    <div class="card-label">Step 1 of 3</div>
+    <h2>Upload your salary slip</h2>
+    <p>We'll extract your take-home automatically using OCR. Or skip and enter manually.</p>
+
+    <div class="upload-area" onclick="document.getElementById('file-input').click()">
+      <input type="file" id="file-input" accept=".pdf,.png,.jpg,.jpeg" hidden/>
+      <span class="upload-icon">↑</span>
+      <div class="upload-label">Click to upload PDF or image</div>
+      <div class="upload-sub">Supports PDF, JPG, PNG</div>
+      <div id="upload-status"></div>
+    </div>
+
+    <div id="salary-result" class="hidden">
+      <div class="detected-box">
+        <div>
+          <div class="detected-label">Take-home detected</div>
+          <div class="detected-value" id="take-home-display"></div>
+        </div>
+        <span style="color:#10b981; font-size:1.4rem">✓</span>
+      </div>
+      <label>Correct if wrong</label>
+      <input type="number" id="take-home-input" placeholder="e.g. 55000"/>
+    </div>
+
+    <div id="manual-entry" class="hidden">
+      <label>Monthly take-home salary (₹)</label>
+      <input type="number" id="take-home-manual" placeholder="e.g. 55000"/>
+    </div>
+
+    <div class="step1-actions">
+      <button id="skip-ocr" class="btn-outline" onclick="showManualEntry()">Skip — enter manually</button>
+      <button id="step1-next" class="btn hidden" onclick="goToStep2()">Continue →</button>
+    </div>
+  </section>
+
+  <!-- STEP 2 -->
+  <section id="step-2" class="card hidden">
+    <div class="card-label">Step 2 of 3</div>
+    <h2>Enter your debts</h2>
+    <p>Add every EMI, credit card, or loan. The more accurate, the better your plan.</p>
+
+    <div class="debt-header">
+      <span>Debt Name</span>
+      <span>Total Amount (₹)</span>
+      <span>Interest %</span>
+      <span>Monthly EMI (₹)</span>
+      <span></span>
+    </div>
+
+    <div id="debts-list"></div>
+
+    <div style="display:flex; gap:1rem; align-items:center; margin-top:0.5rem; flex-wrap:wrap;">
+      <button class="btn-outline" onclick="addDebtRow()">+ Add Debt</button>
+      <button class="btn" onclick="runAnalysis()">Generate my plan →</button>
+    </div>
+  </section>
+
+  <!-- LOADER -->
+  <div id="loader" class="hidden">
+    <div class="spinner"></div>
+    <p id="loader-text">Analyzing your debts...</p>
+    <p class="sub">Schwing's AI is building your personalized roadmap</p>
+  </div>
+
+  <!-- STEP 3 -->
+  <section id="step-3" class="card hidden">
+    <div class="card-label">Step 3 of 3 — Your Plan</div>
+    <h2>Your Debt Payoff Roadmap</h2>
+
+    <div id="summary-box"></div>
+
+    <div class="map-container">
+      <h3>Where your money goes</h3>
+      <canvas id="debt-map" width="800" height="520"></canvas>
+    </div>
+
+    <div class="step3-actions">
+      <button class="btn" onclick="goToResults()">View Full Payoff Plan →</button>
+      <a href="/map" class="btn-outline">🌐 View 3D Debt Map</a>
+      <button class="btn-outline" onclick="exportPDF()">Download PDF Report</button>
+    </div>
+  </section>
+
+</main>
+
+<script src="/static/js/app.js"></script>
+<script>
+  // Step indicator sync
+  function updateStepIndicator(step) {
+    for (let i = 1; i <= 3; i++) {
+      const el = document.getElementById(`ind-${i}`);
+      el.classList.remove('active', 'done');
+      if (i < step) el.classList.add('done');
+      if (i === step) el.classList.add('active');
+    }
+  }
+
+  const origGoToStep2 = window.goToStep2;
+  window.goToStep2 = function() {
+    origGoToStep2();
+    if (!document.getElementById('step-2').classList.contains('hidden')) {
+      updateStepIndicator(2);
+    }
+  };
+
+  const origRunAnalysis = window.runAnalysis;
+  window.runAnalysis = async function() {
+    await origRunAnalysis();
+    if (!document.getElementById('step-3').classList.contains('hidden')) {
+      updateStepIndicator(3);
+    }
+  };
+</script>
+</body>
+</html>
