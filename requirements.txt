@@ -1,14 +1,4 @@
-fastapi
-uvicorn
-python-multipart
-pytesseract
-Pillow
-pdf2image
-groq
-reportlab
-python-dotenv
-jinja2
-aiofilesfastapi==0.111.0
+fastapi==0.111.0
 uvicorn==0.29.0
 python-multipart==0.0.9
 pytesseract
